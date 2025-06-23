@@ -6,13 +6,14 @@ This repository contains the optimized Supabase database schema for the Verbund 
 
 **Target Supabase Project**: `https://fljvxaqqxlioxljkchte.supabase.co`
 
-**Key Improvements over v1.0:**
+**Key Improvements over v2.0:**
 - ✅ Standardized naming conventions (snake_case)
 - ✅ Proper data types and constraints
 - ✅ Optimized indexes for performance
 - ✅ Centralized vector storage approach
 - ✅ Flexible process state management
 - ✅ Proper foreign key relationships
+- ✅ **CORRECTED**: Clean normalization and clear naming
 
 ## 📊 **Database Tables**
 
@@ -22,7 +23,7 @@ This repository contains the optimized Supabase database schema for the Verbund 
 |-------|--------|-------------|
 | `tenders` | ✅ **Finalized** | Main tender/procurement opportunities |
 | `tender_documents` | ✅ **Finalized** | Documents associated with tenders |
-| `tender_images` | ✅ **Finalized** | Images extracted from documents |
+| `tender_document_images` | ✅ **Finalized** | Images extracted from documents during parsing |
 | `tender_document_types` | ✅ **Finalized** | German localized document type classification |
 | `tender_criteria` | ✅ **Finalized** | Evaluation criteria with dependencies and evidence tracking |
 
@@ -49,7 +50,7 @@ npx supabase link --project-ref fljvxaqqxlioxljkchte
 # Run schema files in order
 psql $DATABASE_URL -f database/01_tenders.sql
 psql $DATABASE_URL -f database/02_tender_documents.sql
-psql $DATABASE_URL -f database/03_tender_images.sql
+psql $DATABASE_URL -f database/03_tender_document_images.sql
 psql $DATABASE_URL -f database/04_tender_document_types.sql
 psql $DATABASE_URL -f database/05_tender_criteria.sql
 ```
@@ -69,7 +70,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
 -- Enable RLS on all tables
 ALTER TABLE tenders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tender_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tender_document_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_document_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_criteria ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_criteria_dependencies ENABLE ROW LEVEL SECURITY;
@@ -78,7 +79,7 @@ ALTER TABLE tender_criteria_source ENABLE ROW LEVEL SECURITY;
 -- Basic policies (adjust based on auth requirements)
 CREATE POLICY "Allow all for service role" ON tenders FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_documents FOR ALL TO service_role USING (true);
-CREATE POLICY "Allow all for service role" ON tender_images FOR ALL TO service_role USING (true);
+CREATE POLICY "Allow all for service role" ON tender_document_images FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_document_types FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_criteria FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_criteria_dependencies FOR ALL TO service_role USING (true);
@@ -88,7 +89,7 @@ CREATE POLICY "Allow all for service role" ON tender_criteria_source FOR ALL TO 
 ## 🔧 **Schema Design Principles**
 
 ### **Naming Conventions**
-- **Tables**: `snake_case` (e.g., `tender_documents`)
+- **Tables**: `snake_case` (e.g., `tender_document_images`)
 - **Columns**: `snake_case` (e.g., `created_at`, `file_size`)
 - **Indexes**: `idx_table_column` (e.g., `idx_tenders_status`)
 - **Constraints**: `chk_description` (e.g., `chk_file_size_positive`)
@@ -123,6 +124,11 @@ CREATE POLICY "Allow all for service role" ON tender_criteria_source FOR ALL TO 
 
 ## 🎛️ **Key Features**
 
+### **Clean Normalized Relationships** ✨
+- **No redundant foreign keys** - Clean normalization
+- **Clear naming** - `tender_document_images` vs `tender_images`
+- **Proper hierarchy** - Documents → Images → Evidence
+
 ### **Flexible State Management**
 - `process_state` fields accept any text for app flexibility
 - No rigid CHECK constraints on processing states
@@ -149,11 +155,11 @@ CREATE POLICY "Allow all for service role" ON tender_criteria_source FOR ALL TO 
 ### **Criteria Evaluation System**
 - **Complex criteria management** with explicit/implicit classification
 - **Dependency tracking** between evaluation criteria
-- **Evidence linking** to source documents and images
+- **Evidence linking** to source documents and extracted images
 - **Flexible validation** with JSON conditions and verification methods
 
 ---
 
 **Last Updated**: June 23, 2025  
-**Schema Version**: v2.0  
+**Schema Version**: v2.0 - **Corrected**  
 **Target Project**: fljvxaqqxlioxljkchte.supabase.co
