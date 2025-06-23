@@ -1,6 +1,7 @@
 -- ===============================================
--- TENDER DOCUMENT TYPE TABLE - STANDARDIZED PROPOSAL
+-- TENDER DOCUMENT TYPE TABLE - STANDARDIZED & CLEAN
 -- For project: https://fljvxaqqxlioxljkchte.supabase.co
+-- Reference table for categorizing document types - German localized
 -- ===============================================
 
 CREATE TABLE tender_document_types (
@@ -10,8 +11,8 @@ CREATE TABLE tender_document_types (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     -- Basic Information
-    title TEXT NOT NULL UNIQUE, -- Your existing field
-    description TEXT, -- Your existing field
+    title TEXT NOT NULL UNIQUE, -- Document type name
+    description TEXT, -- Detailed description
     
     -- Classification
     category TEXT, -- Free text for flexible categorization
@@ -42,31 +43,13 @@ INSERT INTO tender_document_types (title, description, category, is_required, ex
 ('Technische Spezifikationen', 'Detaillierte technische Anforderungen und Spezifikationen', 'technisch', true, 15, 1),
 ('Allgemeine Geschäftsbedingungen', 'Rechtliche Bedingungen, Konditionen und Vertragsanforderungen', 'rechtlich', true, 8, 2),
 ('Einreichungsrichtlinien', 'Anweisungen für die Angebotsabgabe und Formatanforderungen', 'administrativ', true, 5, 3),
-('Bewertungskriterien', 'Bewertungsmethodik und Details zu den Bewertungskriterien', 'kommerziell', true, 12, 4),
+('Bewertungskriterien', 'Bewertungsmethodiki und Details zu den Bewertungskriterien', 'kommerziell', true, 12, 4),
 ('Kommerzielle Anforderungen', 'Preisstruktur, Zahlungsbedingungen und kommerzielle Konditionen', 'kommerziell', true, 6, 5),
 ('Leistungsumfang', 'Detaillierte Beschreibung der zu erbringenden Arbeiten', 'technisch', true, 10, 6),
 ('Hintergrundinformationen', 'Projektkontext, Hintergrund und ergänzende Informationen', 'ergänzend', false, 2, 7),
 ('Formulare und Vorlagen', 'Erforderliche Formulare, Vorlagen und Einreichungsformate', 'administrativ', false, 1, 8),
 ('Anhänge', 'Unterstützende Dokumente, Diagramme und Referenzmaterialien', 'ergänzend', false, 0, 9),
 ('Änderungsmitteilung', 'Änderungen, Korrekturen oder Updates zur ursprünglichen Ausschreibung', 'administrativ', false, 3, 10);
-
--- ===============================================
--- UPDATE TENDER DOCUMENTS TABLE
--- ===============================================
-
--- Add foreign key reference to existing tender_documents table
-ALTER TABLE tender_documents 
-ADD COLUMN document_type_id BIGINT REFERENCES tender_document_types(id);
-
--- Update default language to German in tender_documents table
-ALTER TABLE tender_documents 
-ALTER COLUMN language SET DEFAULT 'de';
-
--- Create index for the new foreign key
-CREATE INDEX idx_tender_documents_type_id ON tender_documents(document_type_id);
-
--- Migrate existing document_type text values to foreign keys (optional migration script)
--- This would be done during migration based on existing data
 
 -- ===============================================
 -- INDEXES FOR PERFORMANCE
@@ -208,7 +191,7 @@ CREATE POLICY "Allow read for authenticated users" ON tender_document_types FOR 
 -- COMMENTS FOR DOCUMENTATION
 -- ===============================================
 
-COMMENT ON TABLE tender_document_types IS 'Reference table for categorizing different types of tender documents';
+COMMENT ON TABLE tender_document_types IS 'Reference table for categorizing different types of tender documents with German localization';
 COMMENT ON COLUMN tender_document_types.title IS 'Unique name for the document type';
 COMMENT ON COLUMN tender_document_types.description IS 'Detailed description of what this document type contains';
 COMMENT ON COLUMN tender_document_types.category IS 'Free text classification of document type';
