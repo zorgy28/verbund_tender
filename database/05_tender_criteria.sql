@@ -75,8 +75,8 @@ CREATE TABLE tender_criteria_source (
     -- Foreign Key Relations
     tender_id BIGINT NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
     criteria_id BIGINT NOT NULL REFERENCES tender_criteria(id) ON DELETE CASCADE,
-    tender_documents_id BIGINT REFERENCES tender_documents(id) ON DELETE SET NULL,
-    tender_images_id BIGINT REFERENCES tender_images(id) ON DELETE SET NULL,
+    tender_document_id BIGINT REFERENCES tender_documents(id) ON DELETE SET NULL,
+    tender_image_id BIGINT REFERENCES tender_images(id) ON DELETE SET NULL,
     
     -- Evidence Details
     evidence_extract TEXT, -- Your field - extracted evidence text
@@ -87,7 +87,7 @@ CREATE TABLE tender_criteria_source (
     
     -- Ensure at least one document or image reference
     CONSTRAINT chk_has_source CHECK (
-        tender_documents_id IS NOT NULL OR tender_images_id IS NOT NULL
+        tender_document_id IS NOT NULL OR tender_image_id IS NOT NULL
     )
 );
 
@@ -108,8 +108,8 @@ CREATE INDEX idx_criteria_dependencies_dependency_id ON tender_criteria_dependen
 -- Source tracking indexes
 CREATE INDEX idx_criteria_source_criteria_id ON tender_criteria_source(criteria_id);
 CREATE INDEX idx_criteria_source_tender_id ON tender_criteria_source(tender_id);
-CREATE INDEX idx_criteria_source_documents_id ON tender_criteria_source(tender_documents_id);
-CREATE INDEX idx_criteria_source_images_id ON tender_criteria_source(tender_images_id);
+CREATE INDEX idx_criteria_source_document_id ON tender_criteria_source(tender_document_id);
+CREATE INDEX idx_criteria_source_image_id ON tender_criteria_source(tender_image_id);
 
 -- Composite indexes for common queries
 CREATE INDEX idx_criteria_tender_category ON tender_criteria(tender_id, category);
@@ -200,7 +200,7 @@ BEGIN
         td.file_name as document_name,
         tcs.page_number
     FROM tender_criteria_source tcs
-    LEFT JOIN tender_documents td ON td.id = tcs.tender_documents_id
+    LEFT JOIN tender_documents td ON td.id = tcs.tender_document_id
     WHERE tcs.criteria_id = p_criteria_id
     ORDER BY tcs.created_at ASC;
 END;
