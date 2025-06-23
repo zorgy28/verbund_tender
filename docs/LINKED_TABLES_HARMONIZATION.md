@@ -1,38 +1,54 @@
-# Tender Criteria Schema - Linked Tables & Field Harmonization ✅ CORRECTED
+# Database Schema Harmonization - Corrected Relationships ✅
 
-## 🔗 **LINKED TABLES FOR `05_tender_criteria.sql`**
+## 🎯 **FINAL CORRECTED SCHEMA STATUS**
 
-### **Direct Foreign Key References:**
+All relationship corrections have been successfully implemented. The database schema now follows clean normalization principles with consistent naming conventions.
+
+---
+
+## 📊 **Schema Corrections Summary**
+
+### **✅ COMPLETED CORRECTIONS (June 23, 2025)**
+
+| Task | Status | Description |
+|------|--------|-------------|
+| **1. Table Renaming** | ✅ **DONE** | `tender_images` → `tender_document_images` |
+| **2. File Reorganization** | ✅ **DONE** | `03_tender_images.sql` → `03_tender_document_images.sql` |
+| **3. Field Normalization** | ✅ **DONE** | Remove redundant `tender_id` from `tender_criteria_source` |
+| **4. Field Renaming** | ✅ **DONE** | `tender_image_id` → `tender_document_image_id` |
+| **5. Documentation Update** | ✅ **DONE** | Updated README and relationship docs |
+
+---
+
+## 🔗 **FINAL CLEAN RELATIONSHIP MODEL**
+
+### **📋 Direct Foreign Key References:**
 
 | Source Table | Field | References | Relationship |
-|-------------|-------|------------|-------------|
+|--------------|-------|------------|--------------|
 | `tender_criteria` | `tender_id` | `tenders(id)` | Each criteria belongs to one tender |
 | `tender_criteria_dependencies` | `criteria_id` | `tender_criteria(id)` | Many-to-many criteria dependencies |
 | `tender_criteria_dependencies` | `dependency_id` | `tender_criteria(id)` | Self-referencing dependencies |
 | `tender_criteria_source` | `criteria_id` | `tender_criteria(id)` | Evidence links to criteria |
 | `tender_criteria_source` | `tender_document_id` | `tender_documents(id)` | Evidence from documents |
-| `tender_criteria_source` | `tender_document_image_id` | `tender_document_images(id)` | Evidence from extracted images |
+| `tender_criteria_source` | `tender_document_image_id` | `tender_document_images(id)` | Evidence from extracted images ✅ |
 
-### **Cascading Deletion Rules:**
-- **CASCADE**: When tender is deleted → all criteria and evidence are deleted
-- **CASCADE**: When criteria is deleted → dependencies and evidence are deleted  
-- **SET NULL**: When document/image is deleted → evidence reference becomes null (evidence remains)
+### **🗑️ REMOVED REDUNDANT FIELD:**
+- ❌ ~~`tender_criteria_source.tender_id`~~ - **REMOVED** (redundant - derivable via `criteria_id → tender_criteria → tender_id`)
 
 ---
 
-## ✅ **CORRECTED RELATIONSHIP MODEL**
-
-### **🎯 Final Clean Architecture:**
+## 🏗️ **CLEAN ARCHITECTURE ACHIEVED**
 
 ```
 Tenders (root)
 ├── Tender Documents (tender_id)
 │   ├── → Document Types (document_type_id)
-│   └── Tender Document Images (tender_document_id + tender_id)
+│   └── Tender Document Images (tender_document_id + tender_id) ✅
 │       └── [Extracted during parsing + Used as evidence]
 │
 ├── Tender Criteria (tender_id)
-│   ├── Tender Criteria Source (criteria_id) ← CLEAN: No redundant tender_id
+│   ├── Tender Criteria Source (criteria_id) → CLEAN: No redundant tender_id ✅
 │   │   ├── → Links to Tender Documents (document evidence)
 │   │   └── → Links to Tender Document Images (image evidence) ✅
 │   └── Tender Criteria Dependencies (criteria_id ↔ dependency_id)
@@ -42,24 +58,7 @@ Tenders (root)
 
 ---
 
-## 🔧 **CORRECTIONS IMPLEMENTED**
-
-### **✅ FIXED Issues:**
-
-#### **1. Table & Field Naming Clarity:**
-| Original | Corrected | Reason |
-|----------|-----------|--------|
-| `tender_images` | `tender_document_images` | **Clear relationship** - images are FROM documents |
-| `tender_image_id` | `tender_document_image_id` | **Consistent naming** with table |
-
-#### **2. Clean Normalization:**
-| Field | Action | Reason |
-|-------|--------|--------|
-| `tender_id` in `tender_criteria_source` | **REMOVED** | **Redundant** - derivable via `criteria_id → tender_criteria.tender_id` |
-
----
-
-## ✅ **HARMONIZED NAMING CONVENTIONS**
+## ✨ **NAMING CONVENTIONS STANDARDIZED**
 
 ### **Applied Standards:**
 
@@ -94,34 +93,7 @@ Tenders (root)
 
 ---
 
-## 🏗️ **CORRECTED RELATIONSHIP DIAGRAM**
-
-```
-tenders (1) ────────┐
-    │               │
-    │ tender_id     │ tender_id
-    ▼               ▼
-tender_criteria    tender_documents ──► tender_document_types
-    │ ▲                     │                (document_type_id)
-    │ │ criteria_id         │ tender_document_id
-    │ │                     ▼
-    │ │              tender_document_images
-    │ │                     │
-    │ │ tender_document_image_id
-    │ │                     │
-    │ └── tender_criteria_source ◄─────────┘
-    │           │
-    │           │ criteria_id
-    │           ▼
-    └─── tender_criteria_dependencies
-              │
-              │ dependency_id
-              └─────┘ (self-reference)
-```
-
----
-
-## 📋 **TABLE PURPOSES**
+## 📊 **TABLE PURPOSES**
 
 ### **`tender_document_images`** - Images extracted from documents
 - **Clear naming** - Obviously related to documents
@@ -149,6 +121,19 @@ tender_criteria    tender_documents ──► tender_document_types
 
 ---
 
+## 🚀 **DEPLOYMENT SEQUENCE CORRECTED**
+
+```bash
+# Correct deployment sequence
+psql $DATABASE_URL -f database/01_tenders.sql
+psql $DATABASE_URL -f database/02_tender_documents.sql
+psql $DATABASE_URL -f database/03_tender_document_images.sql  # ✅ RENAMED
+psql $DATABASE_URL -f database/04_tender_document_types.sql
+psql $DATABASE_URL -f database/05_tender_criteria.sql        # ✅ CORRECTED
+```
+
+---
+
 ## 🔧 **QUERY PATTERN CHANGES**
 
 ### **Evidence Queries (Updated):**
@@ -168,7 +153,7 @@ SELECT * FROM tender_criteria_source WHERE criteria_id = 456;
 
 ---
 
-## 📊 **FILES UPDATED**
+## 📁 **FILES UPDATED**
 
 ### **✅ Schema Files:**
 - **`database/03_tender_document_images.sql`** - New clear naming ✅
@@ -185,6 +170,40 @@ SELECT * FROM tender_criteria_source WHERE criteria_id = 456;
 - ✅ **Consistent naming** - All fields follow patterns
 - ✅ **Better maintainability** - Fewer constraints to manage
 - ✅ **Proper hierarchy** - Documents → Images → Evidence
+
+---
+
+## 📅 **COMPLETE CHANGE LOG**
+
+| Date | Time | Change | Files Affected | Commit |
+|------|------|--------|---------------|--------|
+| 2025-06-23 | 17:48 | Rename `tender_images` → `tender_document_images` | `03_tender_document_images.sql` | `12e9eb6` |
+| 2025-06-23 | 17:50 | Remove old `tender_images.sql` file | (deleted file) | `46a2e5a` |
+| 2025-06-23 | 17:51 | Fix normalization in `tender_criteria.sql` | `05_tender_criteria.sql` | `2efa429` |
+| 2025-06-23 | 17:52 | Update README with corrected references | `README.md` | `88b72a8` |
+| 2025-06-23 | 17:53 | Document final relationship corrections | `docs/LINKED_TABLES_HARMONIZATION.md` | *(current)* |
+
+---
+
+## 🎯 **VALIDATION CHECKLIST**
+
+### **✅ Schema Integrity:**
+- [x] All foreign keys point to correct tables
+- [x] No redundant fields in normalized tables
+- [x] Consistent naming patterns throughout
+- [x] Proper cascading delete rules
+- [x] Clean deployment sequence
+
+### **✅ Documentation:**
+- [x] README reflects current table names
+- [x] Deployment instructions updated
+- [x] Relationship diagrams corrected
+- [x] Change log maintained
+
+### **✅ Files:**
+- [x] Old files properly removed
+- [x] New files follow naming conventions
+- [x] All references updated consistently
 
 ---
 
