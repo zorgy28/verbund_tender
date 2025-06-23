@@ -1,5 +1,5 @@
 -- ===============================================
--- TENDER DOCUMENT IMAGES TABLE - CORRECTED NAMING
+-- TENDER DOCUMENT IMAGES TABLE - CLEAN NORMALIZED ARCHITECTURE
 -- For project: https://fljvxaqqxlioxljkchte.supabase.co
 -- Images extracted from tender documents during parsing
 -- ===============================================
@@ -10,9 +10,10 @@ CREATE TABLE tender_document_images (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
-    -- Relationships
-    tender_id BIGINT NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
-    tender_document_id BIGINT REFERENCES tender_documents(id) ON DELETE CASCADE,
+    -- Clean Normalized Relationships
+    -- NOTE: tender_id removed for clean normalization
+    -- tender_id is derivable via: tender_document_id → tender_documents → tender_id
+    tender_document_id BIGINT NOT NULL REFERENCES tender_documents(id) ON DELETE CASCADE,
     
     -- Image Information
     image_path TEXT NOT NULL, -- Path/URL to image
@@ -49,8 +50,7 @@ CREATE TABLE tender_document_images (
 -- ===============================================
 
 -- Essential indexes
-CREATE INDEX idx_tender_document_images_tender_id ON tender_document_images(tender_id);
-CREATE INDEX idx_tender_document_images_document_id ON tender_document_images(tender_document_id) WHERE tender_document_id IS NOT NULL;
+CREATE INDEX idx_tender_document_images_document_id ON tender_document_images(tender_document_id);
 CREATE INDEX idx_tender_document_images_type ON tender_document_images(image_type);
 
 -- Image properties indexes
@@ -65,8 +65,8 @@ CREATE INDEX idx_tender_document_images_page_number ON tender_document_images(pa
 CREATE INDEX idx_tender_document_images_importance ON tender_document_images(importance_score) WHERE importance_score IS NOT NULL;
 
 -- Composite indexes for common queries
-CREATE INDEX idx_tender_document_images_tender_type ON tender_document_images(tender_id, image_type);
-CREATE INDEX idx_tender_document_images_document_page ON tender_document_images(tender_document_id, page_number) WHERE tender_document_id IS NOT NULL;
+CREATE INDEX idx_tender_document_images_document_type ON tender_document_images(tender_document_id, image_type);
+CREATE INDEX idx_tender_document_images_document_page ON tender_document_images(tender_document_id, page_number) WHERE page_number IS NOT NULL;
 
 -- ===============================================
 -- TRIGGERS
@@ -107,9 +107,51 @@ ALTER TABLE tender_document_images ADD CONSTRAINT chk_confidence_score_range
 -- COMMENTS FOR DOCUMENTATION
 -- ===============================================
 
-COMMENT ON TABLE tender_document_images IS 'Images extracted from tender documents during parsing - diagrams, charts, photos, etc.';
+COMMENT ON TABLE tender_document_images IS 'Images extracted from tender documents during parsing - clean normalized relationships';
+COMMENT ON COLUMN tender_document_images.tender_document_id IS 'Direct reference to source document (tender_id derivable via JOIN)';
 COMMENT ON COLUMN tender_document_images.image_path IS 'Storage path/URL to the image file';
 COMMENT ON COLUMN tender_document_images.description IS 'AI-generated description of image content';
 COMMENT ON COLUMN tender_document_images.document_section IS 'Section/chapter where image appears in document';
 COMMENT ON COLUMN tender_document_images.importance_score IS 'AI-calculated importance rating from 0.00 to 1.00';
 COMMENT ON COLUMN tender_document_images.confidence_score IS 'AI confidence in image classification and analysis';
+
+-- ===============================================
+-- UTILITY FUNCTIONS FOR NORMALIZED QUERIES
+-- ===============================================
+
+-- Function to get tender_id for images (since it's normalized away)
+CREATE OR REPLACE FUNCTION get_tender_id_for_image(p_image_id BIGINT)
+RETURNS BIGINT AS $$
+BEGIN
+    RETURN (
+        SELECT td.tender_id 
+        FROM tender_document_images tdi
+        JOIN tender_documents td ON td.id = tdi.tender_document_id
+        WHERE tdi.id = p_image_id
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get all images for a tender (via normalized relationship)
+CREATE OR REPLACE FUNCTION get_tender_images(p_tender_id BIGINT)
+RETURNS TABLE (
+    image_id BIGINT,
+    image_path TEXT,
+    image_type TEXT,
+    document_name TEXT,
+    page_number INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        tdi.id as image_id,
+        tdi.image_path,
+        tdi.image_type,
+        td.file_name as document_name,
+        tdi.page_number
+    FROM tender_document_images tdi
+    JOIN tender_documents td ON td.id = tdi.tender_document_id
+    WHERE td.tender_id = p_tender_id
+    ORDER BY td.file_name, tdi.page_number NULLS LAST;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
