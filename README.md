@@ -24,7 +24,7 @@ This repository contains the optimized Supabase database schema for the Verbund 
 | `tender_documents` | ✅ **Finalized** | Documents associated with tenders |
 | `tender_images` | ✅ **Finalized** | Images extracted from documents |
 | `tender_document_types` | ✅ **Finalized** | German localized document type classification |
-| `tender_criteria` | 🔄 **In Progress** | Evaluation criteria and requirements |
+| `tender_criteria` | ✅ **Finalized** | Evaluation criteria with dependencies and evidence tracking |
 
 ### **Planned Tables**
 
@@ -51,6 +51,7 @@ psql $DATABASE_URL -f database/01_tenders.sql
 psql $DATABASE_URL -f database/02_tender_documents.sql
 psql $DATABASE_URL -f database/03_tender_images.sql
 psql $DATABASE_URL -f database/04_tender_document_types.sql
+psql $DATABASE_URL -f database/05_tender_criteria.sql
 ```
 
 ### **2. Enable Required Extensions**
@@ -70,12 +71,18 @@ ALTER TABLE tenders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_document_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tender_criteria ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tender_criteria_dependencies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tender_criteria_source ENABLE ROW LEVEL SECURITY;
 
 -- Basic policies (adjust based on auth requirements)
 CREATE POLICY "Allow all for service role" ON tenders FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_documents FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_images FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_document_types FOR ALL TO service_role USING (true);
+CREATE POLICY "Allow all for service role" ON tender_criteria FOR ALL TO service_role USING (true);
+CREATE POLICY "Allow all for service role" ON tender_criteria_dependencies FOR ALL TO service_role USING (true);
+CREATE POLICY "Allow all for service role" ON tender_criteria_source FOR ALL TO service_role USING (true);
 ```
 
 ## 🔧 **Schema Design Principles**
@@ -138,6 +145,12 @@ CREATE POLICY "Allow all for service role" ON tender_document_types FOR ALL TO s
 - `tender_document_types` table with German document types
 - Smart filename detection for both German and English keywords
 - Pre-populated with 10 common document types in German
+
+### **Criteria Evaluation System**
+- **Complex criteria management** with explicit/implicit classification
+- **Dependency tracking** between evaluation criteria
+- **Evidence linking** to source documents and images
+- **Flexible validation** with JSON conditions and verification methods
 
 ---
 
