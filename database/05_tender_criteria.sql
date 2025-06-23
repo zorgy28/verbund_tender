@@ -1,5 +1,5 @@
 -- ===============================================
--- TENDER CRITERIA TABLES - STANDARDIZED PROPOSAL
+-- TENDER CRITERIA TABLES - CORRECTED SCHEMA
 -- For project: https://fljvxaqqxlioxljkchte.supabase.co
 -- German localized system
 -- ===============================================
@@ -73,10 +73,9 @@ CREATE TABLE tender_criteria_source (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     -- Foreign Key Relations
-    tender_id BIGINT NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
     criteria_id BIGINT NOT NULL REFERENCES tender_criteria(id) ON DELETE CASCADE,
     tender_document_id BIGINT REFERENCES tender_documents(id) ON DELETE SET NULL,
-    tender_image_id BIGINT REFERENCES tender_images(id) ON DELETE SET NULL,
+    tender_document_image_id BIGINT REFERENCES tender_document_images(id) ON DELETE SET NULL,
     
     -- Evidence Details
     evidence_extract TEXT, -- Your field - extracted evidence text
@@ -87,7 +86,7 @@ CREATE TABLE tender_criteria_source (
     
     -- Ensure at least one document or image reference
     CONSTRAINT chk_has_source CHECK (
-        tender_document_id IS NOT NULL OR tender_image_id IS NOT NULL
+        tender_document_id IS NOT NULL OR tender_document_image_id IS NOT NULL
     )
 );
 
@@ -107,9 +106,8 @@ CREATE INDEX idx_criteria_dependencies_dependency_id ON tender_criteria_dependen
 
 -- Source tracking indexes
 CREATE INDEX idx_criteria_source_criteria_id ON tender_criteria_source(criteria_id);
-CREATE INDEX idx_criteria_source_tender_id ON tender_criteria_source(tender_id);
 CREATE INDEX idx_criteria_source_document_id ON tender_criteria_source(tender_document_id);
-CREATE INDEX idx_criteria_source_image_id ON tender_criteria_source(tender_image_id);
+CREATE INDEX idx_criteria_source_document_image_id ON tender_criteria_source(tender_document_image_id);
 
 -- Composite indexes for common queries
 CREATE INDEX idx_criteria_tender_category ON tender_criteria(tender_id, category);
@@ -237,4 +235,4 @@ COMMENT ON COLUMN tender_criteria.weight IS 'Relative weight/importance of this 
 COMMENT ON COLUMN tender_criteria.is_binary_validation IS 'Whether this is a yes/no validation or scored evaluation';
 
 COMMENT ON TABLE tender_criteria_dependencies IS 'Relationships and dependencies between criteria';
-COMMENT ON TABLE tender_criteria_source IS 'Evidence sources linking criteria to documents and images';
+COMMENT ON TABLE tender_criteria_source IS 'Evidence sources linking criteria to documents and document images';
