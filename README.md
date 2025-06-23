@@ -23,6 +23,7 @@ This repository contains the optimized Supabase database schema for the Verbund 
 | `tenders` | ✅ **Finalized** | Main tender/procurement opportunities |
 | `tender_documents` | ✅ **Finalized** | Documents associated with tenders |
 | `tender_images` | ✅ **Finalized** | Images extracted from documents |
+| `tender_document_types` | ✅ **Finalized** | German localized document type classification |
 | `tender_criteria` | 🔄 **In Progress** | Evaluation criteria and requirements |
 
 ### **Planned Tables**
@@ -49,6 +50,7 @@ npx supabase link --project-ref fljvxaqqxlioxljkchte
 psql $DATABASE_URL -f database/01_tenders.sql
 psql $DATABASE_URL -f database/02_tender_documents.sql
 psql $DATABASE_URL -f database/03_tender_images.sql
+psql $DATABASE_URL -f database/04_tender_document_types.sql
 ```
 
 ### **2. Enable Required Extensions**
@@ -67,11 +69,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
 ALTER TABLE tenders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tender_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tender_document_types ENABLE ROW LEVEL SECURITY;
 
 -- Basic policies (adjust based on auth requirements)
 CREATE POLICY "Allow all for service role" ON tenders FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_documents FOR ALL TO service_role USING (true);
 CREATE POLICY "Allow all for service role" ON tender_images FOR ALL TO service_role USING (true);
+CREATE POLICY "Allow all for service role" ON tender_document_types FOR ALL TO service_role USING (true);
 ```
 
 ## 🔧 **Schema Design Principles**
@@ -98,7 +102,7 @@ CREATE POLICY "Allow all for service role" ON tender_images FOR ALL TO service_r
 - **Proper constraints** for data integrity
 - **Auto-updating timestamps** via triggers
 
-## 📋 **Migration from v1.0**
+## 🔄 **Migration from v1.0**
 
 ### **Field Mappings**
 
@@ -110,7 +114,7 @@ CREATE POLICY "Allow all for service role" ON tender_images FOR ALL TO service_r
 | `size` | `file_size` | More specific |
 | `process_status` | `process_state` | Flexible text |
 
-## 🔍 **Key Features**
+## 🎛️ **Key Features**
 
 ### **Flexible State Management**
 - `process_state` fields accept any text for app flexibility
@@ -129,6 +133,11 @@ CREATE POLICY "Allow all for service role" ON tender_images FOR ALL TO service_r
 - Full-text search vectors removed from main tables
 - Centralized vector storage in separate `embeddings` table
 - Hybrid search approach with Mistral embeddings
+
+### **German Localization**
+- `tender_document_types` table with German document types
+- Smart filename detection for both German and English keywords
+- Pre-populated with 10 common document types in German
 
 ---
 
